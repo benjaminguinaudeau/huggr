@@ -1,0 +1,75 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# huggr
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+Huggr can provides tools to use the [huggingface](https://huggingface.co/) api in R. 
+
+For now, it only allows to extract embeddings, but further capabilities such as mask filling, fine-tuning and classification will eventually be added. 
+
+## Installation
+
+``` r
+# install.packages("devtools")
+devtools::install_github("benjaminguinaudeau/huggr")
+```
+
+## Example
+
+### Set up python environment
+
+```{bash, eval = F}
+conda create -n my_new_python_env python=3.7
+conda activate my_new_python_env
+pip install torch
+pip install transfomers
+pip install sentencepiece
+```
+
+### Setting up reticulate with the right python environment
+
+```{r}
+reticulate::use_condaenv("my_new_python_env", required = TRUE)
+options(python_init = TRUE)
+library(reticulate)
+library(huggr)
+
+load_huggr_dep()
+```
+
+### Download model
+
+```{r, eval = F}
+py$bert_download(model_name = "bert-base-german-cased", 
+                 path = "model/bert-base-german-cased/")
+```
+
+### Extract embedding
+
+```{r, warning = F}
+huggr_model <- py$huggr(path = "model/bert-base-german-cased/", gpu = T)
+
+text <- c("Wie geht's dir?", "Die Übung macht den Meister", "Mir geht's gut")
+
+huggr_model$get_embedding(text) %>%
+  purrr::map_dfr(~tibble::as_tibble(t(.x))) %>%
+  .[,1:10] %>%
+  dplyr::glimpse()
+
+```
+
