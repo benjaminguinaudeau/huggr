@@ -4,7 +4,6 @@
 # huggr
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 Huggr can provides tools to use the
@@ -26,8 +25,8 @@ devtools::install_github("benjaminguinaudeau/huggr")
 ### Set up python environment
 
 ``` bash
-conda create -n my_new_python_env python=3.7
-conda activate my_new_python_env
+conda create -n mbert python=3.7
+conda activate mbert
 pip install torch
 pip install transfomers
 pip install sentencepiece
@@ -36,7 +35,7 @@ pip install sentencepiece
 ### Setting up reticulate with the right python environment
 
 ``` r
-reticulate::use_condaenv("my_new_python_env", required = TRUE)
+reticulate::use_condaenv("mbert", required = TRUE)
 options(python_init = TRUE)
 library(reticulate)
 library(huggr)
@@ -44,34 +43,47 @@ library(huggr)
 load_huggr_dep()
 ```
 
-### Download model
+### Bert
 
 ``` r
-py$bert_download(model_name = "bert-base-german-cased", 
-                 path = "model/bert-base-german-cased/")
-```
-
-### Extract embedding
-
-``` r
-huggr_model <- py$huggr(path = "model/bert-base-german-cased/", gpu = T)
+py$bert_download(model_name = "bert-base-multilingual-cased", 
+                 path = "/data/hugg_dep/models/bert-base-multilingual-cased")
+huggr_bert <- py$huggr_bert(path = "/data/hugg_dep/models/bert-base-multilingual-cased", gpu = T)
 
 text <- c("Wie geht's dir?", "Die Übung macht den Meister", "Mir geht's gut")
 
-huggr_model$get_embedding(text) %>%
+huggr_bert$get_embedding(text) %>%
   purrr::map_dfr(~tibble::as_tibble(t(.x))) %>%
   .[,1:10] %>%
   dplyr::glimpse()
-#> Rows: 3
-#> Columns: 10
-#> $ V1  <dbl> -0.09392457, -0.62265980, 0.16566215
-#> $ V2  <dbl> 0.008658141, -0.238077894, -0.214581221
-#> $ V3  <dbl> 0.1631879, -0.1667901, 0.4888640
-#> $ V4  <dbl> -0.05841911, 0.27493969, -0.06306469
-#> $ V5  <dbl> -0.1176917, 0.4037649, -0.3385237
-#> $ V6  <dbl> 0.1799172, 0.2204656, 0.2940376
-#> $ V7  <dbl> -0.3380525, -0.5499786, -0.5617068
-#> $ V8  <dbl> -1.19956803, 0.04089726, -1.40285277
-#> $ V9  <dbl> -1.3825412, -0.7316115, -0.7105142
-#> $ V10 <dbl> -0.23986839, -0.03437321, -0.08886395
+```
+
+### Roberta
+
+``` r
+# py$roberta_download(model_name = "cardiffnlp/twitter-xlm-roberta-base",
+#                     path = "/data/res/hugg_dep/models/twitter-xlm-roberta-base")
+
+rob <- py$huggr_roberta("/data/res/hugg_dep/models/twitter-xlm-roberta-base")
+text <- c("Wie geht's dir?", "Die Übung macht den Meister", "Mir geht's gut") 
+
+text %>%
+  roberta_clean() %>%
+  rob$get_embedding() %>%
+  purrr::map_dfr(~tibble::as_tibble(t(.x))) %>%
+  .[,1:10] %>%
+  dplyr::glimpse()
+```
+
+### T5
+
+``` r
+py$t5_download(model_name = "t5-small", 
+               path = "/data/hugg_dep/models/t5-small")
+               
+huggr_t5 <- py$huggr_t5(path = "/data/hugg_dep/models/t5-small/", gpu = T)
+
+text <- c("How are you?", "Canada is the best country for wood choping", "Penguins are the cutest living animals.")
+
+huggr_t5$generate_text(task = "translate English to German:", text = text)
 ```

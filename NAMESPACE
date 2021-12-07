@@ -2,4 +2,5 @@
 
 export("%>%")
 export(load_huggr_dep)
+export(roberta_clean)
 importFrom(magrittr,"%>%")

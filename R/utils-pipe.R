@@ -9,3 +9,10 @@
 #' @importFrom magrittr %>%
 #' @usage lhs \%>\% rhs
 NULL
+
+#' @export
+roberta_clean <- function(text){
+  text %>%
+    stringr::str_replace_all("@.*?\\s", "@user ") %>%
+    stringr::str_replace_all("http.*?\\s", "http ")
+}

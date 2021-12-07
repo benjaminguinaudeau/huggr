@@ -7,10 +7,12 @@ output: github_document
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  eval = F,
   comment = "#>",
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+
 ```
 
 # huggr
@@ -34,8 +36,8 @@ devtools::install_github("benjaminguinaudeau/huggr")
 ### Set up python environment
 
 ```{bash, eval = F}
-conda create -n my_new_python_env python=3.7
-conda activate my_new_python_env
+conda create -n mbert python=3.7
+conda activate mbert
 pip install torch
 pip install transfomers
 pip install sentencepiece
@@ -44,7 +46,7 @@ pip install sentencepiece
 ### Setting up reticulate with the right python environment
 
 ```{r}
-reticulate::use_condaenv("my_new_python_env", required = TRUE)
+reticulate::use_condaenv("mbert", required = TRUE)
 options(python_init = TRUE)
 library(reticulate)
 library(huggr)
@@ -52,24 +54,52 @@ library(huggr)
 load_huggr_dep()
 ```
 
-### Download model
-
-```{r, eval = F}
-py$bert_download(model_name = "bert-base-german-cased", 
-                 path = "model/bert-base-german-cased/")
-```
-
-### Extract embedding
+### Bert
 
 ```{r, warning = F}
-huggr_model <- py$huggr(path = "model/bert-base-german-cased/", gpu = T)
+py$bert_download(model_name = "bert-base-multilingual-cased", 
+                 path = "/data/hugg_dep/models/bert-base-multilingual-cased")
+huggr_bert <- py$huggr_bert(path = "/data/hugg_dep/models/bert-base-multilingual-cased", gpu = T)
 
 text <- c("Wie geht's dir?", "Die Übung macht den Meister", "Mir geht's gut")
 
-huggr_model$get_embedding(text) %>%
+huggr_bert$get_embedding(text) %>%
   purrr::map_dfr(~tibble::as_tibble(t(.x))) %>%
   .[,1:10] %>%
   dplyr::glimpse()
+
+```
+
+### Roberta
+
+```{r}
+# py$roberta_download(model_name = "cardiffnlp/twitter-xlm-roberta-base",
+#                     path = "/data/res/hugg_dep/models/twitter-xlm-roberta-base")
+
+rob <- py$huggr_roberta("/data/res/hugg_dep/models/twitter-xlm-roberta-base")
+text <- c("Wie geht's dir?", "Die Übung macht den Meister", "Mir geht's gut") 
+
+text %>%
+  roberta_clean() %>%
+  rob$get_embedding() %>%
+  purrr::map_dfr(~tibble::as_tibble(t(.x))) %>%
+  .[,1:10] %>%
+  dplyr::glimpse()
+
+```
+
+
+### T5
+
+```{r, warning = F}
+py$t5_download(model_name = "t5-small", 
+               path = "/data/hugg_dep/models/t5-small")
+               
+huggr_t5 <- py$huggr_t5(path = "/data/hugg_dep/models/t5-small/", gpu = T)
+
+text <- c("How are you?", "Canada is the best country for wood choping", "Penguins are the cutest living animals.")
+
+huggr_t5$generate_text(task = "translate English to German:", text = text)
 
 ```
 
